@@ -3,10 +3,16 @@ import Search from "./components/Search";
 import Spinner from "./components/Spinner";
 import MovieCard from "./components/MovieCard";
 import { useFetchMovies } from "./api/movies";
+import { useDebounce } from "react-use";
 
 const App = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const { errorMessage, isLoading, movies } = useFetchMovies();
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+
+  useDebounce(() => setDebouncedSearchTerm(searchTerm), 500, [searchTerm]);
+
+  const { errorMessage, isLoading, movies } =
+    useFetchMovies(debouncedSearchTerm);
 
   return (
     <main>
