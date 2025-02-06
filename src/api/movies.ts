@@ -1,36 +1,41 @@
 import axios from "axios";
-import { API_BASE_URL } from "../consts";
-import { useEffect, useState } from "react";
-
-const API_KEY = import.meta.env.VITE_TMBD_API_KEY;
+import { API_BASE_URL, API_KEY } from "../consts";
+import { useEffect, useMemo, useState } from "react";
+import { updateSearchCount } from "../appwrite";
 
 export const useFetchMovies = (query: string) => {
-    const [errorMessage, setErrorMessage] = useState("");
-    const [movies, setMovies] = useState<Movie[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
-  
-    const fetchMovies = async () => {
-      try {
-        setIsLoading(true);
-        setErrorMessage("");
-        const endpoint = query ? `${API_BASE_URL}/search/movie?query=${encodeURIComponent(query)}` : `${API_BASE_URL}/discover/movie?sort_by=popularity.desc`;
-        const { data } = await axios.get(endpoint, {
-          headers: {
-            Authorization: `Bearer ${API_KEY}`,
-          },
-        });
-        setMovies(data.results);
-      } catch (error) {
-        console.log(`Error fetching movies: ${error}`);
-        setErrorMessage("Error fetching movies. Please try again later.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-  
-    useEffect(() => {
-      fetchMovies();
-    }, [query]);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const searchTerm = useMemo(() => query.trim().toLowerCase(), [query]);
 
-    return {errorMessage, movies, isLoading}
-}
+  const fetchMovies = async () => {
+    try {
+      setIsLoading(true);
+      setErrorMessage("");
+      const endpoint = searchTerm
+        ? `${API_BASE_URL}/search/movie?query=${encodeURIComponent(searchTerm)}`
+        : `${API_BASE_URL}/discover/movie?sort_by=popularity.desc`;
+      const { data } = await axios.get(endpoint, {
+        headers: {
+          Authorization: `Bearer ${API_KEY}`,
+        },
+      });
+      setMovies(data.results);
+      if (searchTerm?.length > 1 && data.results.length) {
+        await updateSearchCount(searchTerm, data.results[0]);
+      }
+    } catch (error) {
+      console.log(`Error fetching movies: ${error}`);
+      setErrorMessage("Error fetching movies. Please try again later.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMovies();
+  }, [searchTerm]);
+
+  return { errorMessage, movies, isLoading };
+};
