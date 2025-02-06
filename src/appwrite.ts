@@ -8,7 +8,6 @@ import {
 } from "./consts";
 
 const client = new Client().setEndpoint(APPWRITE_URL).setProject(PROJECT_ID);
-
 const database = new Databases(client);
 
 export const updateSearchCount = async (searchTerm: string, movie: Movie) => {

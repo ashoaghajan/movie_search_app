@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { getTrandingMovies } from "../appwrite";
 
 export const useFetchTrandingMovies = () => {
